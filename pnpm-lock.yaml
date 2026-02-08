@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  packages/hunch-js:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: 1.26.0
