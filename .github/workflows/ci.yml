@@ -7,6 +7,7 @@ on:
 
 jobs:
   js:
+    name: "JS build + tests"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,19 +24,20 @@ jobs:
       - name: Install pnpm
         run: corepack prepare pnpm@9.12.3 --activate
 
-      - name: Install JS deps
+      - name: Install JS deps (pnpm install)
         run: pnpm install --frozen-lockfile
 
-      - name: Build JS
+      - name: Build JS (tsc)
         run: pnpm -r build
 
-      - name: Version check
+      - name: Version check (VERSION sync)
         run: node scripts/version-check.mjs
 
-      - name: Test JS
+      - name: Test JS (node --test)
         run: pnpm -r test
 
   py:
+    name: "Python tests"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -49,5 +51,5 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v4
 
-      - name: Test Python
+      - name: Test Python (pytest)
         run: uv run --directory packages/hunch-py --with pytest pytest
