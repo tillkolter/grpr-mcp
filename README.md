@@ -60,6 +60,9 @@ Hunch is **enabled by default** using built-in defaults. Add a `.hunch.json` or
 set `HUNCH_CONFIG` to override settings. You can also set `"enabled": false`
 inside the config to turn it off explicitly.
 
+For MCP usage across multiple repos, each tool accepts an optional
+`config_path` parameter to point at a specific `.hunch.json`.
+
 ```json
 {
   "version": 1,

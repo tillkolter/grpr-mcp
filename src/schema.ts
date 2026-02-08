@@ -50,6 +50,7 @@ export type HunchSearchParams = {
   since?: string;
   until?: string;
   limit?: number;
+  config_path?: string;
 };
 
 export type HunchStatsParams = {
@@ -59,12 +60,14 @@ export type HunchStatsParams = {
   until?: string;
   group_by: "type" | "level" | "stage";
   limit?: number;
+  config_path?: string;
 };
 
 export type HunchSessionsParams = {
   service?: string;
   since?: string;
   limit?: number;
+  config_path?: string;
 };
 
 export type HunchTailParams = {
@@ -72,5 +75,5 @@ export type HunchTailParams = {
   session_id?: string;
   run_id?: string;
   limit?: number;
+  config_path?: string;
 };
-

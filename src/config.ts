@@ -86,8 +86,14 @@ const parseBool = (value: string | undefined): boolean | undefined => {
   return undefined;
 };
 
-export const loadConfig = (cwd: string = process.cwd()): LoadedConfig => {
-  const explicitConfig = process.env.HUNCH_CONFIG;
+type LoadConfigOptions = {
+  cwd?: string;
+  configPath?: string;
+};
+
+export const loadConfig = (options: LoadConfigOptions = {}): LoadedConfig => {
+  const cwd = options.cwd ?? process.cwd();
+  const explicitConfig = options.configPath ?? process.env.HUNCH_CONFIG;
   const rootDir = explicitConfig
     ? path.dirname(path.resolve(explicitConfig))
     : findRepoRoot(cwd);

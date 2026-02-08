@@ -31,6 +31,7 @@ const SEARCH_SCHEMA = {
     since: { type: "string" },
     until: { type: "string" },
     limit: { type: "number" },
+    config_path: { type: "string" },
   },
 } as const;
 
@@ -44,6 +45,7 @@ const STATS_SCHEMA = {
     until: { type: "string" },
     group_by: { type: "string", enum: ["type", "level", "stage"] },
     limit: { type: "number" },
+    config_path: { type: "string" },
   },
   required: ["group_by"],
 } as const;
@@ -55,6 +57,7 @@ const SESSIONS_SCHEMA = {
     service: { type: "string" },
     since: { type: "string" },
     limit: { type: "number" },
+    config_path: { type: "string" },
   },
 } as const;
 
@@ -66,6 +69,7 @@ const TAIL_SCHEMA = {
     session_id: { type: "string" },
     run_id: { type: "string" },
     limit: { type: "number" },
+    config_path: { type: "string" },
   },
 } as const;
 
@@ -121,7 +125,9 @@ export const startMcpServer = async (): Promise<void> => {
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { config, rootDir } = loadConfig();
+    const args = (request.params.arguments ?? {}) as { config_path?: string };
+    const { config_path: configPath } = args;
+    const { config, rootDir } = loadConfig({ configPath });
     if (!config.enabled) {
       return buildText({
         error:
@@ -132,9 +138,10 @@ export const startMcpServer = async (): Promise<void> => {
 
     if (request.params.name === "hunch.search") {
       const input = (request.params.arguments ?? {}) as HunchSearchParams;
+      const { config_path: _configPath, ...filters } = input;
       const withDefaults: HunchSearchParams = {
-        ...input,
-        since: input.since ?? `${config.mcp.default_lookback_ms}ms`,
+        ...filters,
+        since: filters.since ?? `${config.mcp.default_lookback_ms}ms`,
       };
       const result = await searchEvents(storeDir, config, withDefaults);
       const redacted = result.events.map((event) => redactEvent(config, event));
@@ -143,9 +150,10 @@ export const startMcpServer = async (): Promise<void> => {
 
     if (request.params.name === "hunch.stats") {
       const input = (request.params.arguments ?? {}) as HunchStatsParams;
+      const { config_path: _configPath, ...filters } = input;
       const withDefaults: HunchStatsParams = {
-        ...input,
-        since: input.since ?? `${config.mcp.default_lookback_ms}ms`,
+        ...filters,
+        since: filters.since ?? `${config.mcp.default_lookback_ms}ms`,
       };
       const result = await statsEvents(storeDir, config, withDefaults);
       return buildText(result);
@@ -153,9 +161,10 @@ export const startMcpServer = async (): Promise<void> => {
 
     if (request.params.name === "hunch.sessions") {
       const input = (request.params.arguments ?? {}) as HunchSessionsParams;
+      const { config_path: _configPath, ...filters } = input;
       const withDefaults: HunchSessionsParams = {
-        ...input,
-        since: input.since ?? `${config.mcp.default_lookback_ms}ms`,
+        ...filters,
+        since: filters.since ?? `${config.mcp.default_lookback_ms}ms`,
       };
       const result = await listSessions(storeDir, config, withDefaults);
       return buildText(result);
@@ -163,11 +172,12 @@ export const startMcpServer = async (): Promise<void> => {
 
     if (request.params.name === "hunch.tail") {
       const input = (request.params.arguments ?? {}) as HunchTailParams;
+      const { config_path: _configPath, ...filters } = input;
       const limit = input.limit ?? Math.min(config.mcp.max_results, 50);
       const result = await searchEvents(storeDir, config, {
-        service: input.service,
-        session_id: input.session_id,
-        run_id: input.run_id,
+        service: filters.service,
+        session_id: filters.session_id,
+        run_id: filters.run_id,
         limit: config.mcp.max_results,
       });
 
