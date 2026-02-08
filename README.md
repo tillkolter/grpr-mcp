@@ -25,6 +25,33 @@ hunch wrap --service debate-room --session room-123 -- pnpm run dev
 hunch mcp
 ```
 
+## Best practice (copy-paste)
+
+1) Add local config (ignored by git):
+
+`.hunch.json`
+```json
+{
+  "version": 1,
+  "enabled": true,
+  "store_dir": "logs/hunch",
+  "default_service": "my-service"
+}
+```
+
+2) Add one line to AGENTS.md:
+
+```
+When debugging, use Hunch telemetry first (hunch.stats → hunch.search; tail only if asked).
+```
+
+3) Run:
+
+```sh
+hunch wrap --service my-service --session dev-1 -- <your command>
+hunch mcp
+```
+
 ## Config
 
 Hunch reads `.hunch.json` from your repo root.
