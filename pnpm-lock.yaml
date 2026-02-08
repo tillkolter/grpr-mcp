@@ -8,11 +8,46 @@ importers:
 
   .: {}
 
-  packages/hunch-js:
+  packages/grpr-cli:
+    dependencies:
+      grpr:
+        specifier: workspace:*
+        version: link:../grpr-js
+      grpr-core:
+        specifier: workspace:*
+        version: link:../grpr-core
+      grpr-mcp:
+        specifier: workspace:*
+        version: link:../grpr-mcp
+    devDependencies:
+      '@types/node':
+        specifier: 25.2.2
+        version: 25.2.2
+
+  packages/grpr-core:
+    devDependencies:
+      '@types/node':
+        specifier: 25.2.2
+        version: 25.2.2
+
+  packages/grpr-js:
+    dependencies:
+      grpr-core:
+        specifier: workspace:*
+        version: link:../grpr-core
+    devDependencies:
+      '@types/node':
+        specifier: 25.2.2
+        version: 25.2.2
+
+  packages/grpr-mcp:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: 1.26.0
         version: 1.26.0(zod@4.3.6)
+      grpr-core:
+        specifier: workspace:*
+        version: link:../grpr-core
     devDependencies:
       '@types/node':
         specifier: 25.2.2
