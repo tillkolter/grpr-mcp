@@ -1,0 +1,166 @@
+import fs from "node:fs";
+import path from "node:path";
+import { GrprConfig } from "./schema.js";
+
+const DEFAULT_CONFIG: GrprConfig = {
+  version: 1,
+  enabled: true,
+  store_dir: "logs/grpr",
+  default_service: "grpr",
+  redaction: {
+    enabled: true,
+    keys: ["authorization", "api_key", "token", "secret", "password"],
+    patterns: ["sk-[A-Za-z0-9]{20,}", "Bearer\\s+[A-Za-z0-9._-]+"],
+  },
+  mcp: {
+    max_results: 200,
+    default_lookback_ms: 300000,
+  },
+};
+
+export type LoadedConfig = {
+  rootDir: string;
+  configPath?: string;
+  localConfigPath?: string;
+  config: GrprConfig;
+};
+
+const readJsonFile = (filePath: string): unknown | null => {
+  try {
+    const raw = fs.readFileSync(filePath, "utf8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+const isDirOrFile = (filePath: string): boolean => {
+  try {
+    fs.accessSync(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const findRepoRoot = (startDir: string): string => {
+  let current = path.resolve(startDir);
+  while (true) {
+    if (isDirOrFile(path.join(current, ".git"))) {
+      return current;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return startDir;
+    }
+    current = parent;
+  }
+};
+
+const mergeConfig = (base: GrprConfig, override: Partial<GrprConfig>): GrprConfig => {
+  return {
+    ...base,
+    ...override,
+    redaction: {
+      ...base.redaction,
+      ...(override.redaction ?? {}),
+    },
+    mcp: {
+      ...base.mcp,
+      ...(override.mcp ?? {}),
+    },
+  };
+};
+
+const parseBool = (value: string | undefined): boolean | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "true") {
+    return true;
+  }
+  if (normalized === "false") {
+    return false;
+  }
+  return undefined;
+};
+
+type LoadConfigOptions = {
+  cwd?: string;
+  configPath?: string;
+};
+
+export const loadConfig = (options: LoadConfigOptions = {}): LoadedConfig => {
+  const cwd = options.cwd ?? process.cwd();
+  const explicitConfig =
+    options.configPath ??
+    process.env.GRPR_CONFIG_PATH;
+  const rootDir = explicitConfig
+    ? path.dirname(path.resolve(explicitConfig))
+    : findRepoRoot(cwd);
+
+  const configPath = explicitConfig ?? path.join(rootDir, ".grpr.json");
+  const configExists = isDirOrFile(configPath);
+  const configJson = configExists ? readJsonFile(configPath) : null;
+
+  let config = DEFAULT_CONFIG;
+
+  if (configJson && typeof configJson === "object") {
+    config = mergeConfig(config, configJson as Partial<GrprConfig>);
+  }
+
+
+  const envEnabled = parseBool(process.env.GRPR_ENABLED);
+  if (envEnabled !== undefined) {
+    config = { ...config, enabled: envEnabled };
+  }
+
+  if (process.env.GRPR_DIR) {
+    config = { ...config, store_dir: process.env.GRPR_DIR };
+  }
+
+  if (process.env.GRPR_SERVICE) {
+    config = { ...config, default_service: process.env.GRPR_SERVICE };
+  }
+
+  return {
+    rootDir,
+    configPath: configExists ? configPath : undefined,
+    localConfigPath: undefined,
+    config,
+  };
+};
+
+export const resolveCheckpointPath = (storeDir: string): string => {
+  return path.join(storeDir, ".grpr-checkpoint");
+};
+
+export const readCheckpoint = (storeDir: string): number | undefined => {
+  const checkpointPath = resolveCheckpointPath(storeDir);
+  if (!isDirOrFile(checkpointPath)) {
+    return undefined;
+  }
+  try {
+    const raw = fs.readFileSync(checkpointPath, "utf8").trim();
+    if (!/^\d+$/.test(raw)) {
+      return undefined;
+    }
+    const value = Number(raw);
+    if (!Number.isFinite(value)) {
+      return undefined;
+    }
+    return value < 1e12 ? value * 1000 : value;
+  } catch {
+    return undefined;
+  }
+};
+
+export const resolveStoreDir = (config: GrprConfig, rootDir: string): string => {
+  if (path.isAbsolute(config.store_dir)) {
+    return config.store_dir;
+  }
+  return path.join(rootDir, config.store_dir);
+};
+
+export const getDefaultConfig = (): GrprConfig => DEFAULT_CONFIG;
