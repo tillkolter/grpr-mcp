@@ -88,7 +88,7 @@ def _parse_bool(value: Optional[str]) -> Optional[bool]:
 
 def load_config(*, cwd: Optional[str] = None, config_path: Optional[str] = None) -> LoadedConfig:
     working_dir = cwd or os.getcwd()
-    explicit_config = config_path or os.environ.get("HUNCH_CONFIG")
+    explicit_config = config_path or os.environ.get("HUNCH_CONFIG_PATH")
     if explicit_config:
         root_dir = str(Path(explicit_config).resolve().parent)
     else:

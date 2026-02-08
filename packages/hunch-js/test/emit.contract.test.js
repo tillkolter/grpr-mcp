@@ -81,7 +81,7 @@ for (const testCase of cases) {
     const env = {
       ...process.env,
       ...testCase.env,
-      HUNCH_CONFIG: configPath,
+      HUNCH_CONFIG_PATH: configPath,
       HUNCH_CASE_PATH: casePath,
     };
 
