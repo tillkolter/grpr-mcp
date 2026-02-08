@@ -93,7 +93,9 @@ def load_config(*, cwd: Optional[str] = None, config_path: Optional[str] = None)
         or os.environ.get("INIT_CWD")
         or os.getcwd()
     )
-    explicit_config = config_path or os.environ.get("HUNCH_CONFIG")
+    explicit_config = config_path or os.environ.get("HUNCH_CONFIG") or os.environ.get(
+        "HUNCH_CONFIG_PATH"
+    )
     if explicit_config:
         resolved_explicit = Path(explicit_config)
         if not resolved_explicit.is_absolute():

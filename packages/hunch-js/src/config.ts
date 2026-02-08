@@ -7,6 +7,11 @@ const DEFAULT_CONFIG: HunchConfig = {
   enabled: true,
   store_dir: "logs/hunch",
   default_service: "hunch",
+  sdk: {
+    enabled: true,
+    capture_stdout: true,
+    capture_stderr: true,
+  },
   redaction: {
     enabled: true,
     keys: ["authorization", "api_key", "token", "secret", "password"],
@@ -69,6 +74,10 @@ const mergeConfig = (base: HunchConfig, override: Partial<HunchConfig>): HunchCo
   return {
     ...base,
     ...override,
+    sdk: {
+      ...base.sdk,
+      ...(override.sdk ?? {}),
+    },
     redaction: {
       ...base.redaction,
       ...(override.redaction ?? {}),
@@ -105,7 +114,8 @@ export const loadConfig = (options: LoadConfigOptions = {}): LoadedConfig => {
     process.env.HUNCH_CWD ??
     process.env.INIT_CWD ??
     process.cwd();
-  const explicitConfig = options.configPath ?? process.env.HUNCH_CONFIG;
+  const explicitConfig =
+    options.configPath ?? process.env.HUNCH_CONFIG ?? process.env.HUNCH_CONFIG_PATH;
   let rootDir = findRepoRoot(cwd);
   let configPath = path.join(rootDir, ".hunch.json");
 
@@ -157,6 +167,30 @@ export const resolveStoreDir = (config: HunchConfig, rootDir: string): string =>
     return config.store_dir;
   }
   return path.join(rootDir, config.store_dir);
+};
+
+export const resolveCheckpointPath = (storeDir: string): string => {
+  return path.join(storeDir, ".hunch-checkpoint");
+};
+
+export const readCheckpoint = (storeDir: string): number | undefined => {
+  const checkpointPath = resolveCheckpointPath(storeDir);
+  if (!isDirOrFile(checkpointPath)) {
+    return undefined;
+  }
+  try {
+    const raw = fs.readFileSync(checkpointPath, "utf8").trim();
+    if (!raw) {
+      return undefined;
+    }
+    const parsed = Number(raw);
+    if (Number.isNaN(parsed)) {
+      return undefined;
+    }
+    return parsed;
+  } catch {
+    return undefined;
+  }
 };
 
 export const getDefaultConfig = (): HunchConfig => DEFAULT_CONFIG;

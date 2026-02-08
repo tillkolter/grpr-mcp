@@ -23,6 +23,7 @@ The SDK reads `.hunch.json` in your repo root and honors the same environment
 variables as the JS SDK:
 
 - `HUNCH_CONFIG`
+- `HUNCH_CONFIG_PATH`
 - `HUNCH_CWD`
 - `HUNCH_DIR`
 - `HUNCH_ENABLED`

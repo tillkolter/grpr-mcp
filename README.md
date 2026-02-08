@@ -105,6 +105,7 @@ Relative `config_path` values resolve against the server working directory (or
 
 ### Environment overrides
 - `HUNCH_CONFIG` — explicit config path
+- `HUNCH_CONFIG_PATH` — alias for `HUNCH_CONFIG`
 - `HUNCH_CWD` — base directory for resolving relative config paths
 - `HUNCH_DIR` — store dir override
 - `HUNCH_ENABLED` — true/false
