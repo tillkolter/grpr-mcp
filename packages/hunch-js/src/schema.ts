@@ -6,6 +6,8 @@ export type HunchSource = {
   kind: HunchSourceKind;
   file?: string;
   line?: number;
+  backend?: string;
+  backend_id?: string;
 };
 
 export type HunchSdkConfig = {
@@ -36,6 +38,7 @@ export type HunchConfig = {
   store_dir: string;
   default_service: string;
   sdk: HunchSdkConfig;
+  read?: HunchReadConfig;
   redaction: {
     enabled: boolean;
     keys: string[];
@@ -45,6 +48,43 @@ export type HunchConfig = {
     max_results: number;
     default_lookback_ms: number;
   };
+};
+
+export type HunchReadBackendType = "local" | "cloudwatch" | "k8s";
+
+export type LocalReadBackendConfig = {
+  type: "local";
+  id?: string;
+  dir?: string;
+};
+
+export type CloudWatchReadBackendConfig = {
+  type: "cloudwatch";
+  id?: string;
+  logGroup: string;
+  region: string;
+  profile?: string;
+  service?: string;
+};
+
+export type K8sReadBackendConfig = {
+  type: "k8s";
+  id?: string;
+  namespace: string;
+  selector: string;
+  context?: string;
+  container?: string;
+  service?: string;
+};
+
+export type HunchReadBackendConfig =
+  | LocalReadBackendConfig
+  | CloudWatchReadBackendConfig
+  | K8sReadBackendConfig;
+
+export type HunchReadConfig = {
+  backend: "local" | "multi";
+  backends?: HunchReadBackendConfig[];
 };
 
 export type HunchSearchParams = {
@@ -57,6 +97,7 @@ export type HunchSearchParams = {
   since?: string;
   until?: string;
   limit?: number;
+  backends?: string[];
   config_path?: string;
 };
 
@@ -67,6 +108,7 @@ export type HunchStatsParams = {
   until?: string;
   group_by: "type" | "level" | "stage";
   limit?: number;
+  backends?: string[];
   config_path?: string;
 };
 
@@ -74,6 +116,7 @@ export type HunchSessionsParams = {
   service?: string;
   since?: string;
   limit?: number;
+  backends?: string[];
   config_path?: string;
 };
 
@@ -82,5 +125,6 @@ export type HunchTailParams = {
   session_id?: string;
   run_id?: string;
   limit?: number;
+  backends?: string[];
   config_path?: string;
 };

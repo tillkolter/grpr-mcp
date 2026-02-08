@@ -134,6 +134,8 @@ For MCP usage across multiple repos, each tool accepts an optional
 }
 ```
 
+Remote backends (CloudWatch/K8s) require optional SDK installs; install only if you use them.
+
 ### Environment overrides
 - `HUNCH_CONFIG_PATH` — explicit config path
 - `HUNCH_DIR` — store dir override

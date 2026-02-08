@@ -13,11 +13,7 @@ import {
   HunchStatsParams,
   HunchTailParams,
 } from "../schema.js";
-import {
-  listSessions,
-  searchEvents,
-  statsEvents,
-} from "../store/file-store.js";
+import { readSearch, readSessions, readStats, readTail } from "../store/read-store.js";
 
 const SEARCH_SCHEMA = {
   type: "object",
@@ -32,6 +28,7 @@ const SEARCH_SCHEMA = {
     since: { type: "string" },
     until: { type: "string" },
     limit: { type: "number" },
+    backends: { type: "array", items: { type: "string" } },
     config_path: { type: "string" },
   },
 } as const;
@@ -46,6 +43,7 @@ const STATS_SCHEMA = {
     until: { type: "string" },
     group_by: { type: "string", enum: ["type", "level", "stage"] },
     limit: { type: "number" },
+    backends: { type: "array", items: { type: "string" } },
     config_path: { type: "string" },
   },
   required: ["group_by"],
@@ -58,6 +56,7 @@ const SESSIONS_SCHEMA = {
     service: { type: "string" },
     since: { type: "string" },
     limit: { type: "number" },
+    backends: { type: "array", items: { type: "string" } },
     config_path: { type: "string" },
   },
 } as const;
@@ -70,6 +69,7 @@ const TAIL_SCHEMA = {
     session_id: { type: "string" },
     run_id: { type: "string" },
     limit: { type: "number" },
+    backends: { type: "array", items: { type: "string" } },
     config_path: { type: "string" },
   },
 } as const;
@@ -165,7 +165,7 @@ export const startMcpServer = async (): Promise<void> => {
         ...filters,
         since: resolveSince(filters.since, config, storeDir),
       };
-      const result = await searchEvents(storeDir, config, withDefaults);
+      const result = await readSearch(config, rootDir, withDefaults);
       const redacted = result.events.map((event) => redactEvent(config, event));
       return buildText({ ...result, events: redacted });
     }
@@ -177,7 +177,7 @@ export const startMcpServer = async (): Promise<void> => {
         ...filters,
         since: resolveSince(filters.since, config, storeDir),
       };
-      const result = await statsEvents(storeDir, config, withDefaults);
+      const result = await readStats(config, rootDir, withDefaults);
       return buildText(result);
     }
 
@@ -188,7 +188,7 @@ export const startMcpServer = async (): Promise<void> => {
         ...filters,
         since: resolveSince(filters.since, config, storeDir),
       };
-      const result = await listSessions(storeDir, config, withDefaults);
+      const result = await readSessions(config, rootDir, withDefaults);
       return buildText(result);
     }
 
@@ -197,25 +197,16 @@ export const startMcpServer = async (): Promise<void> => {
       const { config_path: _configPath, ...filters } = input;
       const limit = input.limit ?? Math.min(config.mcp.max_results, 50);
       const since = resolveSince(undefined, config, storeDir);
-      const result = await searchEvents(storeDir, config, {
+      const result = await readTail(config, rootDir, {
         service: filters.service,
         session_id: filters.session_id,
         run_id: filters.run_id,
+        limit,
+        backends: filters.backends,
         since,
-        limit: config.mcp.max_results,
       });
-
-      const sorted = result.events
-        .map((event) => ({ event, ts: Date.parse(event.ts) }))
-        .sort((a, b) => {
-          const aTs = Number.isNaN(a.ts) ? 0 : a.ts;
-          const bTs = Number.isNaN(b.ts) ? 0 : b.ts;
-          return aTs - bTs;
-        })
-        .slice(-limit)
-        .map(({ event }) => redactEvent(config, event));
-
-      return buildText({ events: sorted, truncated: result.truncated });
+      const redacted = result.events.map((event) => redactEvent(config, event));
+      return buildText({ ...result, events: redacted });
     }
 
     throw new Error(`Unknown tool: ${request.params.name}`);

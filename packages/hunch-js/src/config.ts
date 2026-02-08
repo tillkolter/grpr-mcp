@@ -12,6 +12,9 @@ const DEFAULT_CONFIG: HunchConfig = {
     capture_stdout: true,
     capture_stderr: true,
   },
+  read: {
+    backend: "local",
+  },
   redaction: {
     enabled: true,
     keys: ["authorization", "api_key", "token", "secret", "password"],
@@ -77,6 +80,11 @@ const mergeConfig = (base: HunchConfig, override: Partial<HunchConfig>): HunchCo
     ...base,
     ...override,
     sdk: mergeSdkConfig(base.sdk, override.sdk),
+    read: {
+      ...(base.read ?? { backend: "local" }),
+      ...(override.read ?? {}),
+      backends: override.read?.backends ?? base.read?.backends,
+    },
     redaction: {
       ...base.redaction,
       ...(override.redaction ?? {}),
