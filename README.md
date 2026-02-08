@@ -97,18 +97,18 @@ telemetry; filtering is MCP-first.
 
 Hunch exposes these MCP tools (filter-first):
 
-- `telemetry.search`
-- `telemetry.stats`
-- `telemetry.sessions`
-- `telemetry.tail` (available, but not default in docs)
+- `hunch.search`
+- `hunch.stats`
+- `hunch.sessions`
+- `hunch.tail` (available, but not default in docs)
 
 ## AI usage guidance
 
 Start with **stats**, then **search**, and only **tail** if needed:
 
-1) `telemetry.stats` with a narrow time window
-2) `telemetry.search` for relevant types/levels/messages
-3) `telemetry.tail` only when live-streaming is required
+1) `hunch.stats` with a narrow time window
+2) `hunch.search` for relevant types/levels/messages
+3) `hunch.tail` only when live-streaming is required
 
 This keeps prompts short and avoids flooding the model with irrelevant logs.
 

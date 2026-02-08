@@ -97,22 +97,22 @@ export const startMcpServer = async (): Promise<void> => {
     return {
       tools: [
         {
-          name: "telemetry.search",
+          name: "hunch.search",
           description: "Search telemetry events with filters.",
           inputSchema: SEARCH_SCHEMA,
         },
         {
-          name: "telemetry.stats",
+          name: "hunch.stats",
           description: "Aggregate telemetry counts by type/level/stage.",
           inputSchema: STATS_SCHEMA,
         },
         {
-          name: "telemetry.sessions",
+          name: "hunch.sessions",
           description: "List recent sessions and error counts.",
           inputSchema: SESSIONS_SCHEMA,
         },
         {
-          name: "telemetry.tail",
+          name: "hunch.tail",
           description: "Return the most recent events (non-streaming).",
           inputSchema: TAIL_SCHEMA,
         },
@@ -124,7 +124,7 @@ export const startMcpServer = async (): Promise<void> => {
     const { config, rootDir } = loadConfig();
     const storeDir = resolveStoreDir(config, rootDir);
 
-    if (request.params.name === "telemetry.search") {
+    if (request.params.name === "hunch.search") {
       const input = (request.params.arguments ?? {}) as HunchSearchParams;
       const withDefaults: HunchSearchParams = {
         ...input,
@@ -135,7 +135,7 @@ export const startMcpServer = async (): Promise<void> => {
       return buildText({ ...result, events: redacted });
     }
 
-    if (request.params.name === "telemetry.stats") {
+    if (request.params.name === "hunch.stats") {
       const input = (request.params.arguments ?? {}) as HunchStatsParams;
       const withDefaults: HunchStatsParams = {
         ...input,
@@ -145,7 +145,7 @@ export const startMcpServer = async (): Promise<void> => {
       return buildText(result);
     }
 
-    if (request.params.name === "telemetry.sessions") {
+    if (request.params.name === "hunch.sessions") {
       const input = (request.params.arguments ?? {}) as HunchSessionsParams;
       const withDefaults: HunchSessionsParams = {
         ...input,
@@ -155,7 +155,7 @@ export const startMcpServer = async (): Promise<void> => {
       return buildText(result);
     }
 
-    if (request.params.name === "telemetry.tail") {
+    if (request.params.name === "hunch.tail") {
       const input = (request.params.arguments ?? {}) as HunchTailParams;
       const limit = input.limit ?? Math.min(config.mcp.max_results, 50);
       const result = await searchEvents(storeDir, config, {
