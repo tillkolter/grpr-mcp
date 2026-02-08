@@ -22,7 +22,7 @@ emit({"message": "hello from python"})
 The SDK reads `.hunch.json` in your repo root and honors the same environment
 variables as the JS SDK:
 
-- `HUNCH_CONFIG`
+- `HUNCH_CONFIG_PATH`
 - `HUNCH_DIR`
 - `HUNCH_ENABLED`
 - `HUNCH_SERVICE`

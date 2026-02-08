@@ -67,7 +67,7 @@ def test_emit_contract(test_case, tmp_path, monkeypatch):
 
     for key, value in test_case.get("env", {}).items():
         monkeypatch.setenv(key, value)
-    monkeypatch.setenv("HUNCH_CONFIG", str(config_path))
+    monkeypatch.setenv("HUNCH_CONFIG_PATH", str(config_path))
 
     emit_module = importlib.import_module("hunch.emit")
     importlib.reload(emit_module)
