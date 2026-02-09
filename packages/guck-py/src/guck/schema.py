@@ -40,10 +40,17 @@ class GuckMcpConfig(TypedDict):
     default_lookback_ms: int
 
 
+class GuckSdkConfig(TypedDict):
+    enabled: bool
+    capture_stdout: bool
+    capture_stderr: bool
+
+
 class GuckConfig(TypedDict):
     version: int
     enabled: bool
     store_dir: str
     default_service: str
+    sdk: GuckSdkConfig
     redaction: GuckRedactionConfig
     mcp: GuckMcpConfig
