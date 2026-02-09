@@ -1,0 +1,85 @@
+[
+  {
+    "name": "captures stdout lines",
+    "config": {
+      "store_dir": "logs/guck",
+      "default_service": "guck-test",
+      "sdk": {
+        "enabled": true,
+        "capture_stdout": true,
+        "capture_stderr": false
+      }
+    },
+    "env": {
+      "GUCK_RUN_ID": "run-stdout",
+      "GUCK_SESSION_ID": "session-stdout"
+    },
+    "writes": [
+      {
+        "stream": "stdout",
+        "text": "hello stdout\n"
+      }
+    ],
+    "expect": {
+      "type": "stdout",
+      "level": "info",
+      "message": "hello stdout",
+      "source": {
+        "kind": "stdout"
+      }
+    }
+  },
+  {
+    "name": "captures stderr lines",
+    "config": {
+      "store_dir": "logs/guck",
+      "default_service": "guck-test",
+      "sdk": {
+        "enabled": true,
+        "capture_stdout": false,
+        "capture_stderr": true
+      }
+    },
+    "env": {
+      "GUCK_RUN_ID": "run-stderr",
+      "GUCK_SESSION_ID": "session-stderr"
+    },
+    "writes": [
+      {
+        "stream": "stderr",
+        "text": "oops\n"
+      }
+    ],
+    "expect": {
+      "type": "stderr",
+      "level": "error",
+      "message": "oops",
+      "source": {
+        "kind": "stderr"
+      }
+    }
+  },
+  {
+    "name": "disabled sdk capture",
+    "config": {
+      "store_dir": "logs/guck",
+      "default_service": "guck-test",
+      "sdk": {
+        "enabled": false,
+        "capture_stdout": true,
+        "capture_stderr": true
+      }
+    },
+    "env": {
+      "GUCK_RUN_ID": "run-disabled",
+      "GUCK_SESSION_ID": "session-disabled"
+    },
+    "writes": [
+      {
+        "stream": "stdout",
+        "text": "hello\n"
+      }
+    ],
+    "expect_no_write": true
+  }
+]

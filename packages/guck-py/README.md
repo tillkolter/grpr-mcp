@@ -21,8 +21,14 @@ uv pip install -e .
 
 ```py
 from guck import emit
+from guck import install_auto_capture
 
 emit({"message": "hello from python"})
+
+# Optional: capture stdout/stderr automatically
+handle = install_auto_capture()
+print("hello from stdout")
+handle.stop()
 ```
 
 ## Config
@@ -36,3 +42,15 @@ variables as the JS SDK:
 - `GUCK_SERVICE`
 - `GUCK_SESSION_ID`
 - `GUCK_RUN_ID`
+
+Auto-capture can be configured via `.guck.json`:
+
+```json
+{
+  "sdk": {
+    "enabled": true,
+    "capture_stdout": true,
+    "capture_stderr": true
+  }
+}
+```

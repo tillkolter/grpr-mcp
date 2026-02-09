@@ -12,6 +12,11 @@ DEFAULT_CONFIG: GuckConfig = {
     "enabled": True,
     "store_dir": "logs/guck",
     "default_service": "guck",
+    "sdk": {
+        "enabled": True,
+        "capture_stdout": True,
+        "capture_stderr": True,
+    },
     "redaction": {
         "enabled": True,
         "keys": ["authorization", "api_key", "token", "secret", "password"],
@@ -63,6 +68,10 @@ def _merge_config(base: GuckConfig, override: Dict[str, Any]) -> GuckConfig:
     merged: GuckConfig = {
         **base,
         **override,
+        "sdk": {
+            **base["sdk"],
+            **(override.get("sdk") or {}),
+        },
         "redaction": {
             **base["redaction"],
             **(override.get("redaction") or {}),
