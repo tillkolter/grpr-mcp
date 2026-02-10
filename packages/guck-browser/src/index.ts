@@ -293,14 +293,13 @@ export const createBrowserClient = (options: BrowserClientOptions): BrowserClien
     let suppressConsoleCapture = false;
     const safeEmit = (payload: Partial<GuckEvent>) => {
       void emit(payload).catch((error) => {
-        if (!onError) {
-          return;
-        }
-        suppressConsoleCapture = true;
-        try {
-          onError(error);
-        } finally {
-          suppressConsoleCapture = false;
+        if (onError) {
+          suppressConsoleCapture = true;
+          try {
+            onError(error);
+          } finally {
+            suppressConsoleCapture = false;
+          }
         }
       });
     };
