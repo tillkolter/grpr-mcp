@@ -138,6 +138,54 @@ Config toggles:
 If you're using `guck wrap`, the CLI sets `GUCK_WRAPPED=1` and the SDK
 auto-capture intentionally skips to avoid double logging.
 
+### Browser SDK (console + errors)
+
+Enable the MCP HTTP ingest endpoint:
+
+```sh
+guck mcp --http-port 7331
+```
+
+Emit browser events:
+
+```ts
+import { createBrowserClient } from "@guckdev/browser";
+
+const client = createBrowserClient({
+  endpoint: "http://localhost:7331/guck/emit",
+  service: "web-ui",
+  sessionId: "dev-1",
+});
+
+await client.emit({ message: "hello from the browser" });
+```
+
+Auto-capture console output + unhandled errors:
+
+```ts
+const { stop } = client.installAutoCapture();
+
+console.error("boom");
+
+stop();
+```
+
+HTTP ingest config (optional defaults shown):
+
+```json
+{
+  "mcp": {
+    "max_results": 200,
+    "default_lookback_ms": 300000,
+    "http": {
+      "host": "127.0.0.1",
+      "path": "/guck/emit",
+      "max_body_bytes": 512000
+    }
+  }
+}
+```
+
 ### Environment overrides
 - `GUCK_CONFIG_PATH` — explicit config path
 - `GUCK_DIR` — store dir override
@@ -145,6 +193,10 @@ auto-capture intentionally skips to avoid double logging.
 - `GUCK_SERVICE` — service name
 - `GUCK_SESSION_ID` — session override
 - `GUCK_RUN_ID` — run id override
+- `GUCK_MCP_HTTP_PORT` — enable HTTP ingest on this port
+- `GUCK_MCP_HTTP_HOST` — HTTP ingest host override
+- `GUCK_MCP_HTTP_PATH` — HTTP ingest path override
+- `GUCK_MCP_HTTP_MAX_BODY_BYTES` — max ingest request size
 
 ### Checkpoint
 
