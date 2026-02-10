@@ -171,9 +171,55 @@ const mapConsoleLevel = (method: ConsoleMethod): GuckLevel => {
   }
 };
 
+const isDevHost = (hostname?: string): boolean => {
+  if (!hostname) {
+    return false;
+  }
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]" ||
+    hostname.startsWith("local.") ||
+    hostname.endsWith(".local")
+  );
+};
+
+const isDevEndpoint = (endpoint: string): boolean => {
+  try {
+    const url = new URL(endpoint);
+    return isDevHost(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const isProdBuild = (): boolean => {
+  const globalProcess = (
+    globalThis as { process?: { env?: Record<string, string | undefined> } }
+  ).process;
+  const nodeEnv = globalProcess?.env?.NODE_ENV;
+  if (typeof nodeEnv === "string") {
+    return nodeEnv === "production";
+  }
+  const meta =
+    typeof import.meta !== "undefined"
+      ? (import.meta as { env?: Record<string, unknown> }).env
+      : undefined;
+  if (meta && typeof meta.PROD === "boolean") {
+    return meta.PROD;
+  }
+  if (meta && typeof meta.MODE === "string") {
+    return meta.MODE === "production";
+  }
+  return false;
+};
+
 export const createBrowserClient = (options: BrowserClientOptions): BrowserClient => {
   if (!options?.endpoint) {
     throw new Error("[guck] endpoint is required");
+  }
+  if (isProdBuild()) {
+    throw new Error("[guck] browser SDK is development-only");
   }
   const endpoint = options.endpoint;
   const service = options.service ?? "guck";
@@ -181,7 +227,8 @@ export const createBrowserClient = (options: BrowserClientOptions): BrowserClien
   const runId = options.runId ?? randomId();
   const tags = options.tags;
   const headers = options.headers ?? {};
-  const enabled = options.enabled ?? true;
+  const devHost = isDevEndpoint(endpoint);
+  const enabled = devHost && (options.enabled ?? true);
   const keepalive = options.keepalive ?? true;
   const fetcher = options.fetch ?? fetch;
   const onError = options.onError;
@@ -206,12 +253,14 @@ export const createBrowserClient = (options: BrowserClientOptions): BrowserClien
       source: input.source ?? { kind: "sdk" },
     };
 
+    const requestHeaders: Record<string, string> = {
+      "content-type": "application/json",
+      ...headers,
+    };
+
     const response = await fetcher(endpoint, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        ...headers,
-      },
+      headers: requestHeaders,
       body: JSON.stringify(event),
       keepalive,
     });
@@ -233,10 +282,16 @@ export const createBrowserClient = (options: BrowserClientOptions): BrowserClien
     const originals: Partial<Record<ConsoleMethod, (...args: unknown[]) => void>> = {};
     const listeners: Array<() => void> = [];
 
+    let suppressConsoleCapture = false;
     const safeEmit = (payload: Partial<GuckEvent>) => {
       void emit(payload).catch((error) => {
         if (onError) {
-          onError(error);
+          suppressConsoleCapture = true;
+          try {
+            onError(error);
+          } finally {
+            suppressConsoleCapture = false;
+          }
         }
       });
     };
@@ -248,6 +303,9 @@ export const createBrowserClient = (options: BrowserClientOptions): BrowserClien
         originals[method] = original;
         console[method] = (...args: unknown[]) => {
           original.apply(console, args);
+          if (suppressConsoleCapture) {
+            return;
+          }
           safeEmit({
             type: "console",
             level: mapConsoleLevel(method),

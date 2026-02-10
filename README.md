@@ -52,6 +52,21 @@ emit({ message: "hello from app" });
 3) Run your app; the MCP client will spawn `guck mcp` and logs are queryable via
 `guck.stats` / `guck.search`.
 
+## Vite drop-in (dev)
+
+Add the Vite plugin to proxy `/guck/emit` during development:
+
+```ts
+import { defineConfig } from "vite";
+import { guckVitePlugin } from "@guckdev/vite";
+
+export default defineConfig({
+  plugins: [guckVitePlugin()],
+});
+```
+
+Then point the browser SDK at `/guck/emit`.
+
 ## Monorepo layout
 
 - `packages/guck-cli` — CLI (wrap/emit/checkpoint/mcp)
@@ -59,6 +74,7 @@ emit({ message: "hello from app" });
 - `packages/guck-js` — JS SDK
 - `packages/guck-mcp` — MCP server
 - `packages/guck-py` — Python SDK
+- `packages/guck-vite` — Vite dev server plugin
 - `specs` — shared contract fixtures for parity tests
 
 ## Python SDK (preview)
@@ -126,7 +142,7 @@ For MCP usage across multiple repos, each tool accepts an optional
   "version": 1,
   "enabled": true,
   "store_dir": "logs/guck",
-  "default_service": "ais-avatars",
+  "default_service": "my-service",
   "redaction": {
     "enabled": true,
     "keys": ["authorization","api_key","token","secret","password"],
