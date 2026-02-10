@@ -101,7 +101,7 @@ const parseRegistryEntry = (value: unknown): RegistryEntry | null => {
   return { root_dir: rootDir, host, path: ingestPath, port, started_at: startedAt };
 };
 
-const loadRegistryEntries = (registryDir: string, repoRoot: string): RegistryEntry[] => {
+const loadRegistryEntries = (registryDir: string, repoRoot?: string): RegistryEntry[] => {
   if (!fs.existsSync(registryDir)) {
     return [];
   }
@@ -114,9 +114,13 @@ const loadRegistryEntries = (registryDir: string, repoRoot: string): RegistryEnt
     try {
       const raw = fs.readFileSync(fullPath, "utf8");
       const parsed = parseRegistryEntry(JSON.parse(raw));
-      if (parsed && parsed.root_dir === repoRoot) {
-        entries.push(parsed);
+      if (!parsed) {
+        continue;
       }
+      if (repoRoot && parsed.root_dir !== repoRoot) {
+        continue;
+      }
+      entries.push(parsed);
     } catch {
       // Ignore malformed registry entries.
     }
@@ -177,7 +181,8 @@ export const guckVitePlugin = (options: GuckVitePluginOptions = {}): Plugin => {
   let resolvedIngest: { url: string; auto: boolean } | null = null;
 
   const resolveAutoIngestUrl = async (): Promise<string> => {
-    const entries = loadRegistryEntries(registryDir, repoRoot);
+    const scopedEntries = loadRegistryEntries(registryDir, repoRoot);
+    const entries = scopedEntries.length > 0 ? scopedEntries : loadRegistryEntries(registryDir);
     const sorted = entries.sort((a, b) => {
       const aTs = Date.parse(a.started_at) || 0;
       const bTs = Date.parse(b.started_at) || 0;

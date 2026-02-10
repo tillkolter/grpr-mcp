@@ -152,3 +152,41 @@ test("auto-discovers ingest via registry", async (t) => {
   const postRequests = upstream.requests.filter((request) => request.method === "POST");
   assert.equal(postRequests.length, 1);
 });
+
+test("auto-discovers ingest without repo root match", async (t) => {
+  const upstream = await startUpstream();
+  t.after(() => upstream.server.close());
+
+  const root = createTempRoot();
+  fs.mkdirSync(path.join(root, ".git"));
+  const registryDir = fs.mkdtempSync(path.join(os.tmpdir(), "guck-registry-"));
+  const registryEntry = {
+    version: 1,
+    pid: process.pid,
+    root_dir: "/",
+    host: "127.0.0.1",
+    path: "/guck/emit",
+    port: upstream.port,
+    started_at: new Date().toISOString(),
+  };
+  fs.writeFileSync(path.join(registryDir, "entry.json"), JSON.stringify(registryEntry));
+
+  const vite = await startVite(
+    guckVitePlugin({
+      configPath: root,
+      registryDir,
+    }),
+    root,
+  );
+  t.after(() => vite.server.close());
+
+  const response = await fetch(`http://127.0.0.1:${vite.port}/guck/emit`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ message: "hello" }),
+  });
+
+  assert.equal(response.status, 200);
+  const postRequests = upstream.requests.filter((request) => request.method === "POST");
+  assert.equal(postRequests.length, 1);
+});
