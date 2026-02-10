@@ -1,5 +1,6 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import fs from "node:fs";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -242,6 +243,37 @@ const isAddrInUse = (error: unknown): boolean => {
 };
 
 export const startMcpServer = async (options: McpServerOptions = {}): Promise<void> => {
+  const logFile = process.env.GUCK_MCP_LOG_FILE;
+  if (logFile) {
+    try {
+      const stream = fs.createWriteStream(logFile, { flags: "a" });
+      const forward = (line: string) => {
+        stream.write(`${line}\n`);
+      };
+      const stdoutWrite = process.stdout.write.bind(process.stdout);
+      const stderrWrite = process.stderr.write.bind(process.stderr);
+      process.stdout.write = ((chunk: string | Uint8Array, encoding?: BufferEncoding, cb?: (err?: Error | null) => void) => {
+        try {
+          forward(`[stdout] ${typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8")}`);
+        } catch {
+          // ignore
+        }
+        return stdoutWrite(chunk as string, encoding as BufferEncoding, cb);
+      }) as typeof process.stdout.write;
+      process.stderr.write = ((chunk: string | Uint8Array, encoding?: BufferEncoding, cb?: (err?: Error | null) => void) => {
+        try {
+          forward(`[stderr] ${typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8")}`);
+        } catch {
+          // ignore
+        }
+        return stderrWrite(chunk as string, encoding as BufferEncoding, cb);
+      }) as typeof process.stderr.write;
+      forward(`[guck-mcp] logging to ${logFile}`);
+    } catch (error) {
+      // fall back to stderr if file logging fails
+      console.error(`[guck-mcp] failed to open log file: ${String(error)}`);
+    }
+  }
   const server = new Server(
     {
       name: "guck",
