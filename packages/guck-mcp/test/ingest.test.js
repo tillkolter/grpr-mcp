@@ -54,6 +54,7 @@ test("http ingest writes redacted events", async (t) => {
     maxBodyBytes: 512000,
     config,
     storeDir,
+    rootDir: storeDir,
   });
   t.after(async () => {
     await handle.close();
@@ -93,6 +94,7 @@ test("http ingest enforces max body bytes", async (t) => {
     maxBodyBytes: 32,
     config,
     storeDir,
+    rootDir: storeDir,
   });
   t.after(async () => {
     await handle.close();
@@ -120,6 +122,7 @@ test("http ingest rejects when disabled", async (t) => {
     maxBodyBytes: 512000,
     config,
     storeDir,
+    rootDir: storeDir,
   });
   t.after(async () => {
     await handle.close();
@@ -146,6 +149,7 @@ test("http ingest supports auto port", async (t) => {
     maxBodyBytes: 512000,
     config,
     storeDir,
+    rootDir: storeDir,
   });
   t.after(async () => {
     await handle.close();

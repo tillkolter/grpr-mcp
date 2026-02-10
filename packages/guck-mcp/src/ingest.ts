@@ -23,6 +23,9 @@ type HttpIngestRuntime = {
   maxBodyBytes: number;
   config: GuckConfig;
   storeDir: string;
+  rootDir?: string;
+  configPath?: string;
+  registryRef?: { current?: string };
 };
 
 type HttpIngestHandle = {
@@ -49,14 +52,26 @@ const readHeader = (req: http.IncomingMessage, name: string): string | undefined
 const resolveRequestConfig = (
   req: http.IncomingMessage,
   options: HttpIngestRuntime,
-): { config: GuckConfig; storeDir: string } => {
+): { config: GuckConfig; storeDir: string; rootDir?: string; configPath?: string; fromHeader: boolean } => {
   const configPath =
     readHeader(req, "x-guck-config-path") ?? readHeader(req, "x-guck-cwd");
   if (!configPath) {
-    return { config: options.config, storeDir: options.storeDir };
+    return {
+      config: options.config,
+      storeDir: options.storeDir,
+      rootDir: options.rootDir,
+      configPath: options.configPath,
+      fromHeader: false,
+    };
   }
   const { config, rootDir } = loadConfig({ configPath });
-  return { config, storeDir: resolveStoreDir(config, rootDir) };
+  return {
+    config,
+    storeDir: resolveStoreDir(config, rootDir),
+    rootDir,
+    configPath: configPath,
+    fromHeader: true,
+  };
 };
 
 const normalizeLevel = (level?: string): GuckEvent["level"] => {
@@ -170,6 +185,8 @@ export const resolveHttpIngestConfig = (input?: HttpIngestConfig) => {
 };
 
 export const startHttpIngest = async (options: HttpIngestRuntime): Promise<HttpIngestHandle> => {
+  let lastRegistryRoot: string | undefined;
+  let lastRegistryConfig: string | undefined;
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", `http://${options.host}`);
 
@@ -185,7 +202,10 @@ export const startHttpIngest = async (options: HttpIngestRuntime): Promise<HttpI
       return;
     }
 
-    const { config, storeDir } = resolveRequestConfig(req, options);
+    const { config, storeDir, rootDir, configPath, fromHeader } = resolveRequestConfig(
+      req,
+      options,
+    );
 
     if (!config.enabled) {
       writeJson(res, 403, { ok: false, error: "Guck disabled" });
@@ -225,6 +245,20 @@ export const startHttpIngest = async (options: HttpIngestRuntime): Promise<HttpI
         });
         const redacted = redactEvent(config, event);
         await appendEvent(storeDir, redacted);
+      }
+      if (
+        fromHeader &&
+        rootDir &&
+        options.registryRef?.current &&
+        (rootDir !== lastRegistryRoot || configPath !== lastRegistryConfig)
+      ) {
+        const { updateIngestRegistryEntry } = await import("./registry.js");
+        updateIngestRegistryEntry(options.registryRef.current, {
+          root_dir: rootDir,
+          config_path: configPath,
+        });
+        lastRegistryRoot = rootDir;
+        lastRegistryConfig = configPath;
       }
     } catch (error) {
       writeJson(res, 500, { ok: false, error: "Failed to write event" });

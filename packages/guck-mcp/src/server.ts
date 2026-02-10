@@ -411,6 +411,7 @@ export const startMcpServer = async (options: McpServerOptions = {}): Promise<vo
   const httpConfig = resolveHttpConfig(baseConfig, options.http);
   if (httpConfig.port !== undefined) {
     const storeDir = resolveStoreDir(baseConfig, baseRoot);
+    const registryRef = { current: undefined as string | undefined };
     let ingestHandle;
     try {
       ingestHandle = await startHttpIngest({
@@ -420,6 +421,9 @@ export const startMcpServer = async (options: McpServerOptions = {}): Promise<vo
         maxBodyBytes: httpConfig.maxBodyBytes,
         config: baseConfig,
         storeDir,
+        rootDir: baseRoot,
+        configPath: baseConfigPath,
+        registryRef,
       });
     } catch (error) {
       if (isAddrInUse(error) && httpConfig.port > 0) {
@@ -430,13 +434,16 @@ export const startMcpServer = async (options: McpServerOptions = {}): Promise<vo
           maxBodyBytes: httpConfig.maxBodyBytes,
           config: baseConfig,
           storeDir,
+          rootDir: baseRoot,
+          configPath: baseConfigPath,
+          registryRef,
         });
       } else {
         throw error;
       }
     }
     try {
-      writeIngestRegistryEntry({
+      const registry = writeIngestRegistryEntry({
         rootDir: baseRoot,
         configPath: baseConfigPath,
         host: httpConfig.host,
@@ -444,6 +451,7 @@ export const startMcpServer = async (options: McpServerOptions = {}): Promise<vo
         port: ingestHandle.port,
         sessionId: process.env.GUCK_SESSION_ID ?? process.env.CODEX_THREAD_ID,
       });
+      registryRef.current = registry.filePath;
     } catch {
       // Registry is best-effort.
     }

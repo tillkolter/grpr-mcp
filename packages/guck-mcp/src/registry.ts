@@ -97,3 +97,31 @@ export const writeIngestRegistryEntry = (
   const dispose = registerCleanup(filePath);
   return { filePath, dispose };
 };
+
+export const updateIngestRegistryEntry = (
+  filePath: string,
+  patch: { root_dir: string; config_path?: string },
+): boolean => {
+  try {
+    const raw = fs.readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(raw) as Partial<GuckIngestRegistryEntry>;
+    if (!parsed || typeof parsed !== "object") {
+      return false;
+    }
+    const next: GuckIngestRegistryEntry = {
+      version: typeof parsed.version === "number" ? parsed.version : 1,
+      pid: typeof parsed.pid === "number" ? parsed.pid : process.pid,
+      root_dir: patch.root_dir,
+      config_path: patch.config_path,
+      host: typeof parsed.host === "string" ? parsed.host : "127.0.0.1",
+      path: typeof parsed.path === "string" ? parsed.path : "/guck/emit",
+      port: typeof parsed.port === "number" ? parsed.port : 0,
+      started_at: typeof parsed.started_at === "string" ? parsed.started_at : new Date().toISOString(),
+      session_id: typeof parsed.session_id === "string" ? parsed.session_id : undefined,
+    };
+    writeAtomic(filePath, JSON.stringify(next, null, 2));
+    return true;
+  } catch {
+    return false;
+  }
+};
