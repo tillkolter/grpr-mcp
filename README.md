@@ -52,9 +52,9 @@ emit({ message: "hello from app" });
 3) Run your app; the MCP client will spawn `guck mcp` and logs are queryable via
 `guck.stats` / `guck.search`.
 
-## Vite drop-in (shared MCP)
+## Vite drop-in (dev)
 
-Add a dev-only proxy inside Vite so the browser never sends filesystem paths:
+Add the Vite plugin to proxy `/guck/emit` during development:
 
 ```ts
 import { defineConfig } from "vite";

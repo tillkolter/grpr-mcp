@@ -1,8 +1,7 @@
 # @guckdev/vite
 
 Vite dev server plugin that proxies `/guck/emit` to a shared Guck MCP ingest
-endpoint and injects the project config server-side. The browser never sends
-filesystem paths.
+endpoint and injects the project config server-side.
 
 ## Install
 

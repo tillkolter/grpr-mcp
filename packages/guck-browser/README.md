@@ -25,7 +25,7 @@ const client = createBrowserClient({
 await client.emit({ message: "hello from the browser" });
 ```
 
-## Vite drop-in (shared MCP)
+## Vite drop-in (dev)
 
 1) `pnpm add -D @guckdev/vite`
 2) Add the plugin in `vite.config.ts`:
