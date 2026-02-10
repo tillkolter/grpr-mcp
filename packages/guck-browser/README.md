@@ -49,7 +49,7 @@ export default defineConfig({
 guck mcp --http-port 7331
 ```
 
-2) If your app runs on HTTPS (e.g. `https://local.hey.bild.de`), proxy the ingest
+2) If your app runs on HTTPS (e.g. `https://local.dev`), proxy the ingest
 endpoint through Caddy so the browser stays on HTTPS:
 
 ```caddyfile
@@ -66,7 +66,7 @@ endpoint through Caddy so the browser stays on HTTPS:
 
 ```ts
 const client = createBrowserClient({
-  endpoint: "https://local.hey.bild.de/guck/emit",
+  endpoint: "https://local.dev/guck/emit",
   service: "playground",
   sessionId: "dev-1",
 });
@@ -80,7 +80,7 @@ Use a development-only import so the SDK never gets bundled for production:
 if (import.meta.env.DEV) {
   const { createBrowserClient } = await import("@guckdev/browser");
   const client = createBrowserClient({
-    endpoint: "https://local.hey.bild.de/guck/emit",
+    endpoint: "https://local.dev/guck/emit",
     service: "playground",
     sessionId: "dev-1",
   });

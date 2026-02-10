@@ -142,7 +142,7 @@ For MCP usage across multiple repos, each tool accepts an optional
   "version": 1,
   "enabled": true,
   "store_dir": "logs/guck",
-  "default_service": "ais-avatars",
+  "default_service": "my-service",
   "redaction": {
     "enabled": true,
     "keys": ["authorization","api_key","token","secret","password"],
