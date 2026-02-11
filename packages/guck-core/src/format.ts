@@ -57,6 +57,9 @@ const setValueAtPath = (
   let current: Record<string, unknown> = target;
   for (let index = 0; index < path.length; index += 1) {
     const segment = path[index];
+    if (!segment) {
+      return;
+    }
     const isLast = index === path.length - 1;
     if (isLast) {
       current[segment] = value;
@@ -122,7 +125,7 @@ export const projectEventFields = (
       continue;
     }
     const [topLevel] = path;
-    if (!ALLOWED_FIELDS.has(topLevel)) {
+    if (!topLevel || !ALLOWED_FIELDS.has(topLevel)) {
       continue;
     }
     const value = getValueAtPath(event as Record<string, unknown>, path);
@@ -145,7 +148,7 @@ const applyTemplate = (event: GuckEvent, template: string): string => {
       return "";
     }
     const [topLevel] = path;
-    if (!ALLOWED_FIELDS.has(topLevel)) {
+    if (!topLevel || !ALLOWED_FIELDS.has(topLevel)) {
       return "";
     }
     const value = getValueAtPath(event as Record<string, unknown>, path);
