@@ -49,6 +49,8 @@ export type GuckConfig = {
 export type GuckMcpConfig = {
   max_results: number;
   default_lookback_ms: number;
+  max_output_chars?: number;
+  max_message_chars?: number;
 };
 
 export type GuckReadBackendType = "local" | "cloudwatch" | "k8s";
@@ -102,6 +104,8 @@ export type GuckSearchParams = {
   since?: string;
   until?: string;
   limit?: number;
+  max_output_chars?: number;
+  max_message_chars?: number;
   format?: "json" | "text";
   fields?: string[];
   template?: string;
@@ -134,6 +138,8 @@ export type GuckTailParams = {
   run_id?: string;
   limit?: number;
   query?: string;
+  max_output_chars?: number;
+  max_message_chars?: number;
   format?: "json" | "text";
   fields?: string[];
   template?: string;
