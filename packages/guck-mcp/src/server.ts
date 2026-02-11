@@ -209,17 +209,19 @@ export const startMcpServer = async (options: McpServerOptions = {}): Promise<vo
         {
           name: "guck.search",
           description:
-            "Search telemetry events with filters. Supports boolean message-only query (query), JSON field projection (fields), or text formatting with template (format: text + template).",
+            "Search telemetry events with filters. Supports boolean message-only query (query), JSON field projection (fields), or text formatting with template (format: text + template). For large datasets, start with guck.stats to narrow time/backends and keep limit small; if truncated is true, refine scope before increasing limits.",
           inputSchema: SEARCH_SCHEMA,
         },
         {
           name: "guck.stats",
-          description: "Aggregate telemetry counts by type/level/stage.",
+          description:
+            "Aggregate telemetry counts by type/level/stage. Use this first to scope time windows and backends before running guck.search.",
           inputSchema: STATS_SCHEMA,
         },
         {
           name: "guck.sessions",
-          description: "List recent sessions and error counts.",
+          description:
+            "List recent sessions and error counts. Useful for finding a session_id to drill into with guck.search.",
           inputSchema: SESSIONS_SCHEMA,
         },
         {
