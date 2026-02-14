@@ -7,6 +7,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import {
   GuckConfig,
+  GuckLevel,
   GuckSearchParams,
   GuckSessionsParams,
   GuckStatsParams,
@@ -463,7 +464,7 @@ type CompactParams = {
   sid?: string;
   rid?: string;
   ty?: string[];
-  lv?: string[];
+  lv?: GuckLevel[];
   cn?: string;
   q?: string;
   since?: string;
@@ -547,18 +548,19 @@ const readCompactConfigPath = (value: unknown): string | undefined => {
   return typeof cfg === "string" ? cfg : undefined;
 };
 
-const resolveConfigPath = (
-  toolName: string,
-  args: Record<string, unknown>,
-): string | undefined => {
-  if (typeof args.config_path === "string") {
-    return args.config_path;
+const resolveConfigPath = (toolName: string, args: unknown): string | undefined => {
+  if (!args || typeof args !== "object") {
+    return undefined;
+  }
+  const record = args as Record<string, unknown>;
+  if (typeof record.config_path === "string") {
+    return record.config_path;
   }
   if (toolName === "guck.search" || toolName === "guck.tail") {
-    return readCompactConfigPath(args.compact);
+    return readCompactConfigPath(record.compact);
   }
   if (toolName === "guck.search_batch") {
-    const common = args.common;
+    const common = record.common;
     if (common && typeof common === "object") {
       const compact = (common as { compact?: unknown }).compact;
       const fromCommon = readCompactConfigPath(compact);
@@ -637,7 +639,7 @@ export const startMcpServer = async (options: McpServerOptions = {}): Promise<vo
     if (request.params.name === "guck.mcp_version") {
       return buildText({ name: MCP_PACKAGE.name, version: MCP_PACKAGE.version });
     }
-    const rawArgs = (request.params.arguments ?? {}) as Record<string, unknown>;
+    const rawArgs = request.params.arguments ?? {};
     const configPath = resolveConfigPath(request.params.name, rawArgs);
     const { config, rootDir } = loadConfig({ configPath });
     if (!config.enabled) {
